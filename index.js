@@ -4,15 +4,17 @@ import { Server } from "socket.io";
 import cors from "cors";
 
 const app = express();
-app.use(express.json()); // Middleware to parse JSON
+app.use(express.json());
 app.use(cors({
   origin: "*",
 }));
 
-const httpServer = createServer(app); // Attach express app to HTTP server
+const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
-  // socket.io options (if any)
+  cors: {
+    origin: "*",
+  },
 });
 
 // Socket.IO connection
@@ -24,18 +26,20 @@ io.on("connection", (socket) => {
   });
 });
 
-// Add POST API
+// POST API to receive webhook data and emit to frontend
 app.post("/api/webhook", (req, res) => {
-
   const message = req.body;
-    console.log(req.body)
+
   if (!message) {
     return res.status(400).json({ error: "Message is required." });
   }
 
-  // Optionally emit message to all connected clients via Socket.IO
+  console.log("Received Webhook Data:", message);
+
+  // Emit to all connected clients
   io.emit("webhook-alert", message);
-  res.status(200).json({ success: true, message  });
+
+  res.status(200).json({ success: true });
 });
 
 // Start server
